@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Contact Form</title>
+    <style>
+        /* Add your CSS styling here */
+    </style>
+</head>
+<body>
+    <h1>Contact Form</h1>
+    <p>Fill in this form to contact the site owners.</p>
+    <form method="POST" action="{{ url_for('contact') }}">
+        {{ form.csrf_token }}
+        <div>
+            <label for="name">Name (Required)</label>
+            {{ form.name.label }} {{ form.name(size=30, class_='form-control') }}
+        </div>
+        <div>
+            <label for="email">E-mail (Required)</label>
+            {{ form.email.label }} {{ form.email(size=30, class_='form-control') }}
+        </div>
+        <div>
+            <label for="subject">Subject (Required)</label>
+            {{ form.subject.label }} {{ form.subject(size=30, class_='form-control') }}
+        </div>
+        <div>
+            <label for="message">Message (Required)</label>
+            {{ form.message.label }} {{ form.message(cols=30, rows=4, class_='form-control') }}
+        </div>
+        <div>
+            {{ form.submit(class_='btn btn-primary') }}
+        </div>
+    </form>
+</body>
+</html>
+ßß

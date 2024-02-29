@@ -1,6 +1,14 @@
+"""
+Flask Documentation:     http://flask.pocoo.org/docs/
+Jinja2 Documentation:    http://jinja.pocoo.org/2/documentation/
+Werkzeug Documentation:  http://werkzeug.pocoo.org/documentation/
+This file creates your application.
+"""
+
 from app import app
 from flask import render_template, request, redirect, url_for, flash
-
+from .forms import ContactForm
+import smtplib
 
 ###
 # Routing for your application.
@@ -16,23 +24,66 @@ def home():
 def about():
     """Render the website's about page."""
     return render_template('about.html', name="Mary Jane")
+    
+@app.route('/contact/', methods=['GET','POST'])
+def contact():
+    """Render the website's contact page."""
+    # Create instance of WTForm
+    form = ContactForm()
+    # Check if a POST request is made
+    if request.method == 'POST':
+        # Validate form entries
+        if form.validate_on_submit():
+            # Get email fields
+            from_name = request.form['name']
+            from_email = request.form['email']
+            subject = request.form['subject']
+            msg = request.form['message']
+            # Send email message
+            send_email(from_name,from_email,subject,msg)
+            # Flash sent confirmation message
+            flash(u'Your message has been sent. Thank you!', 'success')
+            # Redirect user to homepage
+            return redirect(url_for('home'))
+        else:
+            # Display any errors in form
+            flash_errors(form)
+    # If any errors just reload contact page
+    return render_template('contact.html', form=form)
 
 
 ###
 # The functions below should be applicable to all Flask apps.
 ###
 
+def send_email(from_name, from_addr, subject, msg):
+    """Sends email to specified recipient"""
+    to_name = 'Company Name'
+    to_addr = 'company@gmail.com'
+    message = """From: {} <{}>\nTo: {} <{}>\nSubject: {}\n\n{}"""
+    # Format message to be sent
+    message_to_send = message.format(from_name, from_addr, to_name,
+                                     to_addr, subject, msg)
+    
+    # Credentials (if needed)
+    username = 'company@gmail.com'
+    password = 'companypassword'
+    
+    # The actual mail send
+    server = smtplib.SMTP('smtp.gmail.com:587')
+    server.starttls()
+    server.login(username, password)
+    server.sendmail(from_addr, to_addr, message_to_send)
+    server.quit()
 
-# Flash errors from the form if validation fails
 def flash_errors(form):
+    """Flashes form errors"""
     for field, errors in form.errors.items():
         for error in errors:
             flash(u"Error in the %s field - %s" % (
                 getattr(form, field).label.text,
-                error
-            ), 'danger')
-
-
+                error ), 'danger')
+                
 @app.route('/<file_name>.txt')
 def send_text_file(file_name):
     """Send your static text file."""
@@ -44,11 +95,10 @@ def send_text_file(file_name):
 def add_header(response):
     """
     Add headers to both force latest IE rendering engine or Chrome Frame,
-    and also tell the browser not to cache the rendered page. If we wanted
-    to we could change max-age to 600 seconds which would be 10 minutes.
+    and also to cache the rendered page for 10 minutes.
     """
     response.headers['X-UA-Compatible'] = 'IE=Edge,chrome=1'
-    response.headers['Cache-Control'] = 'public, max-age=0'
+    response.headers['Cache-Control'] = 'public, max-age=600'
     return response
 
 
@@ -56,3 +106,7 @@ def add_header(response):
 def page_not_found(error):
     """Custom 404 page."""
     return render_template('404.html'), 404
+
+
+if __name__ == '__main__':
+    app.run(debug=True,host="0.0.0.0",port="8080")
